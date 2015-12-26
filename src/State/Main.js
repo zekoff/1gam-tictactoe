@@ -14,9 +14,15 @@ Main.create = function() {
             if (ttt.field[n] == 'X' || ttt.field[n] == 'O')
                 return;
             placeMarker(n, 'O');
-            if (testForWin('O')) print('win');
+            if (testForWin('O')) {
+                endGame("You Win!");
+                return;
+            }
             placeMarker(getOpponentMove(ttt.field).index, 'X');
-            if (testForWin('X')) print('lose');
+            if (testForWin('X')) {
+                endGame("You Lose...");
+                return;
+            }
         }, this, 0, i);
     }
 };
@@ -26,7 +32,6 @@ var placeMarker = function(index, char) {
     ttt.field[index] = char;
     game.add.image(index % 3 * 200, Math.floor(index / 3) * 200, char);
 };
-
 var testForWin = function(char) {
     var i;
     for (i = 0; i < 9; i += 3)
@@ -36,7 +41,6 @@ var testForWin = function(char) {
     if (ttt.field[0] == char && ttt.field[4] == char && ttt.field[8] == char) return true;
     if (ttt.field[2] == char && ttt.field[4] == char && ttt.field[6] == char) return true;
 };
-
 var getOpponentMove = function(field) {
     var potentialMoves = [];
     var i;
@@ -57,4 +61,16 @@ var getOpponentMove = function(field) {
         return move.value == max;
     });
     return game.rnd.pick(potentialMoves);
+};
+var endGame = function(message) {
+    var mask = game.add.image(0, 0, 'pix');
+    mask.height = mask.width = 600;
+    mask.inputEnabled = true;
+    mask.alpha = 0;
+    game.add.text(300, 300, message, {
+        fill: 'white',
+        fontSize: 120,
+        stroke: 'black',
+        strokeThickness: 5
+    }).anchor.set(0.5);
 };
