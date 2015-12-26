@@ -1,4 +1,5 @@
 /* global game, Phaser, ttt */
+
 var Main = {};
 Main.create = function() {
     ttt.field = Phaser.ArrayUtils.numberArray(0, 8);
@@ -12,9 +13,48 @@ Main.create = function() {
         cell.events.onInputDown.add(function(target, pointer, n) {
             if (ttt.field[n] == 'X' || ttt.field[n] == 'O')
                 return;
-            ttt.field[n] = 'O';
-            game.add.image(n % 3 * 200, Math.floor(n / 3) * 200, 'O');
+            placeMarker(n, 'O');
+            if (testForWin('O')) print('win');
+            placeMarker(getOpponentMove(ttt.field).index, 'X');
+            if (testForWin('X')) print('lose');
         }, this, 0, i);
     }
 };
 module.exports = Main;
+
+var placeMarker = function(index, char) {
+    ttt.field[index] = char;
+    game.add.image(index % 3 * 200, Math.floor(index / 3) * 200, char);
+};
+
+var testForWin = function(char) {
+    var i;
+    for (i = 0; i < 9; i += 3)
+        if (ttt.field[i] == char && ttt.field[i + 1] == char && ttt.field[i + 2] == char) return true;
+    for (i = 0; i < 3; i++)
+        if (ttt.field[i] == char && ttt.field[i + 3] == char && ttt.field[i + 6] == char) return true;
+    if (ttt.field[0] == char && ttt.field[4] == char && ttt.field[8] == char) return true;
+    if (ttt.field[2] == char && ttt.field[4] == char && ttt.field[6] == char) return true;
+};
+
+var getOpponentMove = function(field) {
+    var potentialMoves = [];
+    var i;
+    for (i = 0; i < 9; i++)
+        if (field[i] != 'X' && field[i] != 'O') potentialMoves.push(i);
+    potentialMoves = potentialMoves.map(function(index) {
+        var value = game.rnd.between(-1, 1);
+        return {
+            index: index,
+            value: value
+        };
+    });
+    var max = -1;
+    potentialMoves.forEach(function(move) {
+        if (move.value > max) max = move.value;
+    });
+    potentialMoves = potentialMoves.filter(function(move) {
+        return move.value == max;
+    });
+    return game.rnd.pick(potentialMoves);
+};
