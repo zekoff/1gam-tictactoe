@@ -14,12 +14,17 @@ Main.create = function() {
             if (ttt.field[n] == 'X' || ttt.field[n] == 'O')
                 return;
             placeMarker(n, 'O');
-            if (testForWin('O')) {
+            if (testForWin('O', ttt.field)) {
                 endGame("You Win!");
                 return;
             }
-            placeMarker(getOpponentMove(ttt.field).index, 'X');
-            if (testForWin('X')) {
+            var opponentMove = getOpponentMove(ttt.field);
+            if (!opponentMove) {
+                endGame("Tie...");
+                return;
+            }
+            placeMarker(opponentMove.index, 'X');
+            if (testForWin('X', ttt.field)) {
                 endGame("You Lose...");
                 return;
             }
@@ -32,22 +37,27 @@ var placeMarker = function(index, char) {
     ttt.field[index] = char;
     game.add.image(index % 3 * 200, Math.floor(index / 3) * 200, char);
 };
-var testForWin = function(char) {
+var testForWin = function(char, field) {
     var i;
     for (i = 0; i < 9; i += 3)
-        if (ttt.field[i] == char && ttt.field[i + 1] == char && ttt.field[i + 2] == char) return true;
+        if (field[i] == char && field[i + 1] == char && field[i + 2] == char) return true;
     for (i = 0; i < 3; i++)
-        if (ttt.field[i] == char && ttt.field[i + 3] == char && ttt.field[i + 6] == char) return true;
-    if (ttt.field[0] == char && ttt.field[4] == char && ttt.field[8] == char) return true;
-    if (ttt.field[2] == char && ttt.field[4] == char && ttt.field[6] == char) return true;
+        if (field[i] == char && field[i + 3] == char && field[i + 6] == char) return true;
+    if (field[0] == char && field[4] == char && field[8] == char) return true;
+    if (field[2] == char && field[4] == char && field[6] == char) return true;
 };
 var getOpponentMove = function(field) {
     var potentialMoves = [];
-    var i;
-    for (i = 0; i < 9; i++)
+    field.forEach(function(_, i) {
         if (field[i] != 'X' && field[i] != 'O') potentialMoves.push(i);
+    });
     potentialMoves = potentialMoves.map(function(index) {
-        var value = game.rnd.between(-1, 1);
+        var value, tempField = ttt.field.slice();
+        tempField[index] = 'X';
+        if (testForWin('X', tempField))
+            value = 1;
+        else
+            value = getMoveValue(tempField);
         return {
             index: index,
             value: value
@@ -57,10 +67,9 @@ var getOpponentMove = function(field) {
     potentialMoves.forEach(function(move) {
         if (move.value > max) max = move.value;
     });
-    potentialMoves = potentialMoves.filter(function(move) {
+    return game.rnd.pick(potentialMoves.filter(function(move) {
         return move.value == max;
-    });
-    return game.rnd.pick(potentialMoves);
+    }));
 };
 var endGame = function(message) {
     var mask = game.add.image(0, 0, 'pix');
@@ -69,8 +78,24 @@ var endGame = function(message) {
     mask.alpha = 0;
     game.add.text(300, 300, message, {
         fill: 'white',
-        fontSize: 120,
+        fontSize: 100,
         stroke: 'black',
         strokeThickness: 5
     }).anchor.set(0.5);
+    game.time.events.add(2000, function(){
+        game.state.restart('Main');
+    });
+};
+var getMoveValue = function(field) {
+    var tempField, i;
+    var potentialMoves = [];
+    field.forEach(function(_, i) {
+        if (field[i] != 'X' && field[i] != 'O') potentialMoves.push(i);
+    });
+    for (i = 0; i < potentialMoves.length; i++) {
+        tempField = field.slice();
+        tempField[potentialMoves[i]] = 'O';
+        if (testForWin('O', tempField)) return -1;
+    }
+    return 0;
 };
