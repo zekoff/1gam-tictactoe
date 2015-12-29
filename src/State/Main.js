@@ -6,8 +6,7 @@ Main.create = function() {
     var i, cell;
     for (i = 0; i < 9; i++) {
         cell = game.add.image(i % 3 * 200, Math.floor(i / 3) * 200, 'pix');
-        cell.height = 200;
-        cell.width = 200;
+        cell.height = cell.width = 200;
         cell.tint = Phaser.Color.getRandomColor();
         cell.inputEnabled = true;
         cell.events.onInputDown.add(function(target, pointer, n) {
@@ -82,7 +81,7 @@ var endGame = function(message) {
         stroke: 'black',
         strokeThickness: 5
     }).anchor.set(0.5);
-    game.time.events.add(2000, function(){
+    game.time.events.add(2000, function() {
         game.state.restart('Main');
     });
 };
